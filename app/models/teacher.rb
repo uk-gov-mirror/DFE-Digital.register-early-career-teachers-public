@@ -73,7 +73,6 @@ class Teacher < ApplicationRecord
 
   scope :deactivated_in_trs, -> { where(trs_deactivated: true) }
   scope :active_in_trs, -> { where(trs_deactivated: false) }
-  scope :with_ongoing_induction, -> { joins(:ongoing_induction_period) }
 
   normalizes :corrected_name, with: -> { it.squish }
 end
