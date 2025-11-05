@@ -81,9 +81,14 @@ module Sessions
 
       # @return [Boolean]
       def appropriate_body_user?
-        organisation.id.present? &&
-          ::AppropriateBody.exists?(dfe_sign_in_organisation_id: organisation.id) &&
-          dfe_sign_in_roles.include?('AppropriateBodyUser')
+        if organisation.id.present? &&
+            ::AppropriateBody.exists?(dfe_sign_in_organisation_id: organisation.id) &&
+            dfe_sign_in_roles.include?('AppropriateBodyUser')
+
+          new_ab_data_model
+        else
+          false
+        end
       end
 
       # @return [Sessions::Users::DfEPersona]
@@ -186,6 +191,22 @@ module Sessions
       # @return [OmniAuth::AuthHash::InfoHash]
       def user_info
         @user_info ||= payload.info
+      end
+
+      # WIP
+      def new_ab_data_model
+        ::DfESignInOrganisation.create_with(
+          name: organisation.name, # Educational Success Partners Limited (ESP)
+          uuid: organisation.id, # 722EBB41-42F6-4BA3-81B6-61AF055246A5
+          urn: organisation.urn, # 149948
+          address: organisation.address, # 85 Great Portland Street, London, W1W 7LT
+          company_registration_number: organisation.companyRegistrationNumber, # 11746735
+          category: organisation&.category&.name, # Establishment / Other Stakeholders
+          organisation_type: organisation&.type&.name, # Academy Converter
+          status: organisation&.status&.name, # Open
+          first_authenticated_at: Time.zone.now
+        ).find_or_create_by!(uuid: organisation.id)
+        .update(last_authenticated_at: Time.zone.now)
       end
     end
   end

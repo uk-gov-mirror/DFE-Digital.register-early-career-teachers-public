@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_23_134806) do
+ActiveRecord::Schema[8.0].define(version: 2025_11_06_152802) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -170,6 +170,21 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_23_134806) do
     t.datetime "api_updated_at", default: -> { "CURRENT_TIMESTAMP" }
     t.index ["api_id"], name: "index_delivery_partners_on_api_id", unique: true
     t.index ["name"], name: "index_delivery_partners_on_name", unique: true
+  end
+
+  create_table "dfe_sign_in_organisations", force: :cascade do |t|
+    t.string "name"
+    t.uuid "uuid"
+    t.string "urn"
+    t.string "address"
+    t.string "company_registration_number"
+    t.string "category"
+    t.string "organisation_type"
+    t.string "status"
+    t.datetime "first_authenticated_at"
+    t.datetime "last_authenticated_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "ect_at_school_periods", force: :cascade do |t|

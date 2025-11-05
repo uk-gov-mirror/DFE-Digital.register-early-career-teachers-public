@@ -1,6 +1,8 @@
 module AppropriateBodies
   class Search
+    # National Appropriate Bodies
     ISTIP = 'Independent Schools Teacher Induction Panel (ISTIP)'
+    ESP = 'Educational Success Partners Limited (ESP)'
 
     def initialize(query_string = nil)
       @scope = AppropriateBody
@@ -10,6 +12,10 @@ module AppropriateBodies
 
     def self.istip
       new(ISTIP).search.first || raise(ActiveRecord::RecordNotFound, "ISTIP appropriate body not found!")
+    end
+
+    def self.esp
+      new(ESP).search.first || raise(ActiveRecord::RecordNotFound, "ESP appropriate body not found!")
     end
 
     def find_by_dfe_sign_in_organisation_id(dfe_sign_in_organisation_id)
