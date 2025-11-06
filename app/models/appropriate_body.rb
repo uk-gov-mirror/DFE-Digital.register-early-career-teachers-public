@@ -10,6 +10,7 @@ class AppropriateBody < ApplicationRecord
   has_many :pending_induction_submissions
   has_many :induction_periods, inverse_of: :appropriate_body
   has_many :events
+  belongs_to :dfe_sign_in_organisation, foreign_key: :uuid, primary_key: :dfe_sign_in_organisation_id, inverse_of: :appropriate_body
 
   # Validations
   validates :name,

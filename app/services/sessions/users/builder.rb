@@ -79,6 +79,7 @@ module Sessions
                                 dfe_sign_in_roles:)
       end
 
+      # NB: only capture new data model for valid appropriate_body_user
       # @return [Boolean]
       def appropriate_body_user?
         if organisation.id.present? &&
@@ -106,7 +107,7 @@ module Sessions
         provider == :dfe_sign_in
       end
 
-      # Query the DfE Sign In API
+      # Query the DfE Sign-In API
       # @return [Array<String>] SchoolUser, AppropriateBodyUser, DfEUser
       def dfe_sign_in_roles
         @dfe_sign_in_roles ||= ::Organisation::Access.new(user_id: uid, organisation_id: organisation.id).roles

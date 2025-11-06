@@ -1,4 +1,9 @@
 class DfESignInOrganisation < ApplicationRecord
+  # Associations
+  has_one :appropriate_body, foreign_key: :dfe_sign_in_organisation_id, primary_key: :uuid
+  has_one :school, foreign_key: :urn, primary_key: :urn
+
+  # Validations
   validates :name,
             presence: true,
             uniqueness: true
