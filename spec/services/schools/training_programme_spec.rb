@@ -109,11 +109,31 @@ describe Schools::TrainingProgramme do
             FactoryBot.create(:training_period,
                               :school_led,
                               ect_at_school_period:,
+                              created_at: contract_period.started_on,
                               started_on: "2022-01-01",
                               finished_on: "2022-06-01")
           end
 
           it { is_expected.to eq("school_led") }
+        end
+
+        context "when the only `school_led` ect training was created for a different contract period" do
+          let(:ect_at_school_period) do
+            FactoryBot.create(:ect_at_school_period,
+                              :ongoing,
+                              school:,
+                              started_on: "2021-01-01")
+          end
+          let!(:training_period) do
+            FactoryBot.create(:training_period,
+                              :school_led,
+                              ect_at_school_period:,
+                              created_at: contract_period.finished_on + 1.day,
+                              started_on: "2022-01-01",
+                              finished_on: "2022-06-01")
+          end
+
+          it { is_expected.to eq("not_yet_known") }
         end
 
         context "when there is a mix of `provider_led` and `school_led` as the ects training programmes" do
@@ -142,6 +162,7 @@ describe Schools::TrainingProgramme do
             FactoryBot.create(:training_period,
                               :school_led,
                               ect_at_school_period: ect_at_school_period_2,
+                              created_at: contract_period.started_on,
                               started_on: "2022-01-01",
                               finished_on: "2022-06-01")
           end
@@ -162,6 +183,7 @@ describe Schools::TrainingProgramme do
                             :for_ect,
                             :school_led,
                             ect_at_school_period:,
+                            created_at: contract_period.started_on,
                             started_on: ect_at_school_period.started_on)
         end
 
