@@ -148,6 +148,7 @@ describe API::TeacherSerializer, :with_metadata, type: :serializer do
 
             expect(ect_enrolment["school_urn"]).to be_present
             expect(ect_enrolment["school_urn"]).to eq(ect_training_period.school_partnership.school.urn.to_s)
+            expect(ect_enrolment["school_urn"]).to eq(ect_training_period.school.urn.to_s)
 
             expect(ect_enrolment["participant_type"]).to eq("ect")
 

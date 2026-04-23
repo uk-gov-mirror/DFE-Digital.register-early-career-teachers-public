@@ -330,6 +330,203 @@ RSpec.describe Metadata::Handlers::Teacher do
         end
       end
 
+      context "teacher with expression of interest training periods" do
+        let(:active_lead_provider) { FactoryBot.create(:active_lead_provider, lead_provider: lead_provider1) }
+        let!(:ect_at_school_period) do
+          FactoryBot.create(
+            :ect_at_school_period,
+            school: school1,
+            teacher: teacher1,
+            started_on: 1.year.ago,
+            finished_on: 1.week.ago
+          )
+        end
+        let!(:ect_training_period) do
+          FactoryBot.create(
+            :training_period,
+            :for_ect,
+            :with_only_expression_of_interest,
+            started_on: ect_at_school_period.started_on,
+            finished_on: ect_at_school_period.finished_on,
+            ect_at_school_period:,
+            expression_of_interest_lead_provider: lead_provider1
+          )
+        end
+        let!(:mentor_at_school_period) do
+          FactoryBot.create(
+            :mentor_at_school_period,
+            school: school1,
+            teacher: teacher1,
+            started_on: 5.days.ago,
+            finished_on: nil
+          )
+        end
+        let!(:mentor_training_period) do
+          FactoryBot.create(
+            :training_period,
+            :for_mentor,
+            :with_only_expression_of_interest,
+            started_on: mentor_at_school_period.started_on,
+            finished_on: nil,
+            mentor_at_school_period:,
+            expression_of_interest_lead_provider: lead_provider1
+          )
+        end
+
+        it "creates metadata with contract periods from the training period's expression of interest" do
+          refresh_metadata
+
+          metadata = Metadata::TeacherLeadProvider.where(teacher: teacher1, lead_provider: lead_provider1).sole
+          expect(metadata).to have_attributes(
+            teacher: teacher1,
+            lead_provider: lead_provider1,
+            latest_ect_training_period: ect_training_period,
+            latest_ect_contract_period: ect_training_period.expression_of_interest_contract_period,
+            latest_mentor_training_period: mentor_training_period,
+            latest_mentor_contract_period: mentor_training_period.expression_of_interest_contract_period,
+            api_mentor_id: nil
+          )
+        end
+      end
+
+      context "teacher with both school partnership and expression of interest training periods" do
+        let(:active_lead_provider) { FactoryBot.create(:active_lead_provider, lead_provider: lead_provider1) }
+        let!(:ect_at_school_period1) do
+          FactoryBot.create(
+            :ect_at_school_period,
+            school: school1,
+            teacher: teacher1,
+            started_on: 1.year.ago,
+            finished_on: nil
+          )
+        end
+        let!(:ect_training_period1) do
+          FactoryBot.create(
+            :training_period,
+            :for_ect,
+            :with_only_expression_of_interest,
+            started_on: ect_at_school_period1.started_on,
+            finished_on: 1.week.ago,
+            ect_at_school_period: ect_at_school_period1,
+            expression_of_interest_lead_provider: lead_provider1
+          )
+        end
+        let!(:ect_training_period2) do
+          FactoryBot.create(
+            :training_period,
+            :for_ect,
+            started_on: 10.days.from_now,
+            finished_on: ect_at_school_period1.finished_on,
+            ect_at_school_period: ect_at_school_period1,
+            school_partnership: school_partnership1
+          )
+        end
+        let!(:mentor_at_school_period1) do
+          FactoryBot.create(
+            :mentor_at_school_period,
+            school: school1,
+            teacher: teacher1,
+            started_on: 5.days.ago,
+            finished_on: nil
+          )
+        end
+        let!(:mentor_training_period1) do
+          FactoryBot.create(
+            :training_period,
+            :for_mentor,
+            :with_only_expression_of_interest,
+            started_on: mentor_at_school_period1.started_on,
+            finished_on: 2.days.ago,
+            mentor_at_school_period: mentor_at_school_period1,
+            expression_of_interest_lead_provider: lead_provider1
+          )
+        end
+        let!(:mentor_training_period2) do
+          FactoryBot.create(
+            :training_period,
+            :for_mentor,
+            started_on: 10.days.from_now,
+            finished_on: nil,
+            mentor_at_school_period: mentor_at_school_period1,
+            school_partnership: school_partnership1
+          )
+        end
+
+        it "creates metadata with contract periods from the latest training periods" do
+          refresh_metadata
+
+          metadata = Metadata::TeacherLeadProvider.where(teacher: teacher1, lead_provider: lead_provider1).sole
+          expect(metadata).to have_attributes(
+            teacher: teacher1,
+            lead_provider: lead_provider1,
+            latest_ect_training_period: ect_training_period2,
+            latest_ect_contract_period: ect_training_period2.contract_period,
+            latest_mentor_training_period: mentor_training_period2,
+            latest_mentor_contract_period: mentor_training_period2.contract_period,
+            api_mentor_id: nil
+          )
+        end
+      end
+
+      context "teacher with training period that has both school partnership and expression of interest" do
+        let(:active_lead_provider) { FactoryBot.create(:active_lead_provider, lead_provider: lead_provider1) }
+        let!(:ect_at_school_period) do
+          FactoryBot.create(
+            :ect_at_school_period,
+            school: school1,
+            teacher: teacher1,
+            started_on: 1.year.ago,
+            finished_on: 1.week.ago
+          )
+        end
+        let!(:ect_training_period) do
+          FactoryBot.create(
+            :training_period,
+            :for_ect,
+            started_on: ect_at_school_period.started_on,
+            finished_on: ect_at_school_period.finished_on,
+            ect_at_school_period:,
+            expression_of_interest_lead_provider: lead_provider1,
+            school_partnership: school_partnership1
+          )
+        end
+        let!(:mentor_at_school_period) do
+          FactoryBot.create(
+            :mentor_at_school_period,
+            school: school1,
+            teacher: teacher1,
+            started_on: 5.days.ago,
+            finished_on: nil
+          )
+        end
+        let!(:mentor_training_period) do
+          FactoryBot.create(
+            :training_period,
+            :for_mentor,
+            started_on: mentor_at_school_period.started_on,
+            finished_on: nil,
+            mentor_at_school_period:,
+            expression_of_interest_lead_provider: lead_provider1,
+            school_partnership: school_partnership1
+          )
+        end
+
+        it "creates metadata with contract periods from the training period's contract period" do
+          refresh_metadata
+
+          metadata = Metadata::TeacherLeadProvider.where(teacher: teacher1, lead_provider: lead_provider1).sole
+          expect(metadata).to have_attributes(
+            teacher: teacher1,
+            lead_provider: lead_provider1,
+            latest_ect_training_period: ect_training_period,
+            latest_ect_contract_period: ect_training_period.contract_period,
+            latest_mentor_training_period: mentor_training_period,
+            latest_mentor_contract_period: mentor_training_period.contract_period,
+            api_mentor_id: nil
+          )
+        end
+      end
+
       describe "#involved_in_school_transfer" do
         subject(:metadata) do
           Metadata::TeacherLeadProvider.where(lead_provider: lead_provider1).sole

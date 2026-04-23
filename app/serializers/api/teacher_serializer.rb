@@ -27,7 +27,7 @@ class API::TeacherSerializer < Blueprinter::Base
       field(:mentor_id) do |(training_period, _, metadata)|
         metadata.api_mentor_id if training_period.for_ect?
       end
-      field(:school_urn) { |(training_period, _, _)| training_period.school_partnership.school.urn.to_s }
+      field(:school_urn) { |(training_period, _, _)| training_period.school.urn.to_s }
       field(:participant_type) { |(training_period, _, _)| training_period.for_ect? ? "ect" : "mentor" }
       field(:cohort) do |(training_period, _, metadata)|
         if training_period.for_ect?
@@ -52,11 +52,7 @@ class API::TeacherSerializer < Blueprinter::Base
         training_period.schedule.identifier
       end
       field(:delivery_partner_id) do |(training_period, _, _)|
-        training_period
-          .school_partnership
-          .lead_provider_delivery_partnership
-          .delivery_partner
-          .api_id
+        training_period&.school_partnership&.lead_provider_delivery_partnership&.delivery_partner&.api_id
       end
       association :withdrawal, blueprint: WithdrawalAndDeferralSerializer do |(training_period, _, _)|
         training_status = API::TrainingPeriods::TrainingStatus.new(training_period:).status
