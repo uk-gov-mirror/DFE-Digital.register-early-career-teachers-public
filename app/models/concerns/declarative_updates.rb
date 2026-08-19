@@ -11,9 +11,10 @@ module DeclarativeUpdates
       after_commit(on: on_event) do
         next if DeclarativeUpdates.skip?(:metadata)
 
-        should_touch = destroyed? || when_changing.blank? || when_changing.any? do |attr|
+        relevant_attribute_changed = (when_changing.blank? && saved_changes.any?) || when_changing.any? do |attr|
           saved_change_to_attribute?(attr)
         end
+        should_touch = destroyed? || relevant_attribute_changed
 
         Metadata::Manager.new.refresh_metadata!(instance_exec(&target)) if should_touch
       end
