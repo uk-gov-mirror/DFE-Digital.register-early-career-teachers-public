@@ -149,11 +149,11 @@ locals {
 
   redis = {
     legacy = {
-      cache_url = module.redis-cache.url
+      cache_url = try(module.redis-cache[0].url, null)
     }
-    # managed = {
-    #   cache_url = module.redis-managed-cache.url
-    # }
+    managed = {
+      cache_url = try(module.redis-managed-cache[0].url, null)
+    }
   }
   selected_redis = local.redis[var.redis_mode]
 }
@@ -174,4 +174,16 @@ variable "job_name" {
   description = "name of the k8s job to run"
   type        = string
   default     = "migrations"
+}
+
+variable "deploy_cache_redis" {
+  description = "Whether to create a Cache for Redis instance"
+  type        = bool
+  default     = true
+}
+
+variable "deploy_managed_redis" {
+  description = "Whether to create a Managed Redis instance"
+  type        = bool
+  default     = true
 }
