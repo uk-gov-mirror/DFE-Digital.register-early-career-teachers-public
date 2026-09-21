@@ -29,7 +29,11 @@ module Admin
           expected_mentorship_period_ids
         ]
 
-        def previous_step = :start
+        def previous_step
+          return :select_school_period if wizard.at_school_periods.many?
+
+          :start
+        end
 
         def next_step = :confirmation
 
