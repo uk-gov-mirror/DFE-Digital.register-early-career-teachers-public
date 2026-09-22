@@ -705,4 +705,26 @@ describe Teacher do
       it { is_expected.not_to be_syncable_with_trs }
     end
   end
+
+  describe "#required_to_complete_induction?" do
+    subject { FactoryBot.build(:teacher, trs_induction_status:) }
+
+    context "when the teacher's TRS induction status is nil" do
+      let(:trs_induction_status) { nil }
+
+      it { is_expected.not_to be_required_to_complete_induction }
+    end
+
+    context "when the teacher's TRS induction status is 'RequiredToComplete'" do
+      let(:trs_induction_status) { "RequiredToComplete" }
+
+      it { is_expected.to be_required_to_complete_induction }
+    end
+
+    context "when the teacher's TRS induction status is not 'RequiredToComplete'" do
+      let(:trs_induction_status) { "Passed" }
+
+      it { is_expected.not_to be_required_to_complete_induction }
+    end
+  end
 end

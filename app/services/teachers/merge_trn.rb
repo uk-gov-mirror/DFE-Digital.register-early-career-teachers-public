@@ -7,6 +7,7 @@ module Teachers
     def merge!
       return unless merge_required?
       return if destination.blank?
+      return unless ect_eligibility_data_compatible?
       return if any_overlapping_periods?
 
       ActiveRecord::Base.transaction do
@@ -34,6 +35,12 @@ module Teachers
 
     def merge_required?
       teacher.trs_response == "permanent_redirect" && teacher.trs_redirected_to.present?
+    end
+
+    def ect_eligibility_data_compatible?
+      return true unless destination.required_to_complete_induction?
+
+      teacher.ect_first_became_eligible_for_training_at.blank?
     end
 
     def any_overlapping_periods?

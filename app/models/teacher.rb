@@ -10,6 +10,7 @@ class Teacher < ApplicationRecord
   TRN_FORMAT = %r{\A\d{7}\z}
 
   TRS_RESPONSES = %i[ok not_found gone permanent_redirect].index_with(&:to_s).freeze
+  TRS_INDUCTION_REQUIRED_TO_COMPLETE = "RequiredToComplete"
 
   self.ignored_columns = %i[search]
 
@@ -164,5 +165,9 @@ class Teacher < ApplicationRecord
 
   def syncable_with_trs?
     trs_response.nil? || trs_response_ok?
+  end
+
+  def required_to_complete_induction?
+    trs_induction_status == TRS_INDUCTION_REQUIRED_TO_COMPLETE
   end
 end
