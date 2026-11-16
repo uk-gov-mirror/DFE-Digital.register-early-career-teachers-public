@@ -15,6 +15,7 @@ private
   def hubs
     TeachingSchoolHub.strict_loading.includes(
       appropriate_body_periods: [
+        :teaching_school_hub,
         { provisioning_school: :gias_school },
         { region_awards: [:region, { school: :gias_school }] }
       ]
