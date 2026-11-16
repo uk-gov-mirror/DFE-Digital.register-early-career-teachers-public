@@ -40,6 +40,34 @@ RSpec.describe TeachingSchoolHub do
         it { is_expected.to be_valid }
       end
     end
+
+    context "when nullable_appropriate_body_period_names is on" do
+      subject(:teaching_school_hub) { FactoryBot.create(:teaching_school_hub, name: "North West Hub") }
+
+      before do
+        allow(Rails.application.config).to receive(:nullable_appropriate_body_period_names).and_return(true)
+      end
+
+      context "and an ongoing period has no name override" do
+        before do
+          FactoryBot.create(:appropriate_body_period, :nameless,
+                            teaching_school_hub:,
+                            started_on: 1.year.ago)
+        end
+
+        it { is_expected.to be_valid }
+      end
+
+      context "and the name collides with an existing active body" do
+        before do
+          teaching_school_hub
+          FactoryBot.create(:appropriate_body_period, :national, :nameless,
+                            national_body: FactoryBot.create(:national_body, name: "North West Hub"))
+        end
+
+        it { is_expected.to have_error(:name, "is already used by an ongoing appropriate body.") }
+      end
+    end
   end
 
   describe "normalizing" do

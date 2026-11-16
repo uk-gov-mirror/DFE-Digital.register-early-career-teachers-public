@@ -21,9 +21,9 @@ module AppropriateBodies
     end
 
     def search
-      query = @query_string.present? ? @scope.matching_display_name(@query_string) : @scope.with_naming_bodies_joined
+      query = @query_string.present? ? @scope.matching_display_name(@query_string) : @scope.with_display_names
 
-      query.with_display_names.strict_loading.ordered_by_display_name
+      query.strict_loading.ordered_by_display_name
     end
   end
 end

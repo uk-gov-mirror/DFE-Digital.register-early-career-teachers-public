@@ -764,6 +764,56 @@ describe AppropriateBodyPeriod do
     end
   end
 
+  describe ".overlapping_in_the_same_teaching_school_hub" do
+    let(:hub) { FactoryBot.create(:teaching_school_hub) }
+    let(:period) { FactoryBot.build(:appropriate_body_period, :nameless, teaching_school_hub: hub, started_on: 1.year.ago) }
+
+    it "finds another overlapping period in the same hub" do
+      sibling = FactoryBot.create(:appropriate_body_period, :nameless, teaching_school_hub: hub, started_on: 2.years.ago)
+
+      expect(described_class.overlapping_in_the_same_teaching_school_hub(period)).to contain_exactly(sibling)
+    end
+
+    it "ignores an overlapping period in another hub" do
+      FactoryBot.create(:appropriate_body_period, :nameless, started_on: 2.years.ago)
+
+      expect(described_class.overlapping_in_the_same_teaching_school_hub(period)).to be_empty
+    end
+
+    it "finds nothing for a period without a hub, however many hubless periods overlap" do
+      FactoryBot.create(:appropriate_body_period, :national, started_on: 2.years.ago)
+      national = FactoryBot.build(:appropriate_body_period, :national, started_on: 1.year.ago)
+
+      expect(described_class.overlapping_in_the_same_teaching_school_hub(national)).to be_empty
+    end
+  end
+
+  describe ".current_or_latest_per_display_name" do
+    subject(:periods) { described_class.current_or_latest_per_display_name(["Shared Name", "Other Name"]) }
+
+    let(:hub) { FactoryBot.create(:teaching_school_hub, name: "Shared Name") }
+
+    it "prefers the period running today to a later-dated closed one" do
+      current = FactoryBot.create(:appropriate_body_period, :nameless, teaching_school_hub: hub,
+                                                                       started_on: 3.years.ago, finished_on: nil)
+
+      expect(periods["Shared Name"]).to eq(current)
+    end
+
+    it "falls back to the latest period when none is running today" do
+      FactoryBot.create(:appropriate_body_period, :nameless, teaching_school_hub: hub,
+                                                             started_on: 4.years.ago, finished_on: 3.years.ago)
+      latest = FactoryBot.create(:appropriate_body_period, :nameless, teaching_school_hub: hub,
+                                                                      started_on: 2.years.ago, finished_on: 1.year.ago)
+
+      expect(periods["Shared Name"]).to eq(latest)
+    end
+
+    it "leaves out a name that no period uses" do
+      expect(periods).not_to have_key("Other Name")
+    end
+  end
+
   describe "#display_name" do
     subject(:display_name) { appropriate_body_period.display_name }
 

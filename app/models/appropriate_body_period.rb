@@ -1,18 +1,3 @@
-# An AppropriateBodyPeriod is not "the appropriate body". It is the
-# time-bound pairing of a parent organisation (TeachingSchoolHub,
-# NationalBody, LocalAuthority, or a legacy teaching School), a provisioning lead school, and the regions awarded to
-# that pairing for a period of time.
-#
-# The parent entity carries the canonical name. This model carries the DfE
-# Sign-in identity (dfe_sign_in_organisation_id) because it is users at the
-# provisioning school who authenticate, and each period may have a different
-# provisioning school — e.g. a large hub with concurrent periods can have several
-# different authenticated users, one per period.
-#
-# This model carries #name when the name at the time is not the name today: a
-# trading name to separate concurrent periods, or the historic name of a
-# Teaching School, whose school record has since been renamed.
-#
 class AppropriateBodyPeriod < ApplicationRecord
   # Enums
   enum :body_type, {
@@ -73,22 +58,28 @@ class AppropriateBodyPeriod < ApplicationRecord
       .where.not(id: period.id)
       .overlapping_with(period)
   }
-
-  scope :with_display_names, -> { includes(*body_type_associations) }
-  scope :with_naming_bodies_joined, -> { left_joins(*body_type_associations) }
+  # A single eager load, so the bodies that supply the name are both joined, for the SQL
+  # below, and preloaded, so #display_name costs no queries.
+  scope :with_display_names, -> { eager_load(*body_type_associations) }
   scope :with_display_name, ->(name) {
-    with_naming_bodies_joined.where(Arel.sql("#{DISPLAY_NAME_SQL} = :name"), name:)
+    with_display_names.where(Arel.sql("#{DISPLAY_NAME_SQL} = :name"), name:)
   }
-
   scope :with_display_name_in, ->(names) {
-    with_naming_bodies_joined.where(Arel.sql("#{DISPLAY_NAME_SQL} IN (?)"), names)
+    with_display_names.where(Arel.sql("#{DISPLAY_NAME_SQL} IN (?)"), names)
   }
-
-  scope :ordered_by_display_name, -> { with_naming_bodies_joined.order(Arel.sql(DISPLAY_NAME_SQL), :id) }
+  scope :ordered_by_display_name, -> {
+    with_display_names.order(Arel.sql(DISPLAY_NAME_SQL), :id)
+  }
   scope :matching_display_name, ->(term) {
-    with_naming_bodies_joined
+    with_display_names
       .where(Arel.sql("#{DISPLAY_NAME_SQL} ILIKE :term"), term: "%#{sanitize_sql_like(term)}%")
   }
+
+  def self.current_or_latest_per_display_name(names)
+    with_display_name_in(names)
+      .group_by(&:display_name)
+      .transform_values { it.find(&:contains_today?) || it.max_by(&:started_on) }
+  end
 
   # Normalizations
   normalizes :name, with: -> { it.squish.presence }

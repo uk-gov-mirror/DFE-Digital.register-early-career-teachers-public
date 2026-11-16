@@ -35,7 +35,14 @@ class TeachingSchoolHub < ApplicationRecord
 
   def name_is_not_an_ongoing_appropriate_body_period_name
     return if name.blank?
-    return unless AppropriateBodyPeriod.where(name:).contains_date(Date.current).exists?
+
+    ongoing_appropriate_bodies = AppropriateBodyPeriod.with_display_name(name).contains_date(Date.current)
+    if persisted?
+      ongoing_appropriate_bodies = ongoing_appropriate_bodies.where(
+        "appropriate_body_periods.teaching_school_hub_id IS DISTINCT FROM ?", id
+      )
+    end
+    return unless ongoing_appropriate_bodies.exists?
 
     errors.add(:name, "is already used by an ongoing appropriate body.")
   end
